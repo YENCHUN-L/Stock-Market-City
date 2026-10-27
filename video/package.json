@@ -1,0 +1,21 @@
+{
+  "name": "market-city-films",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "remotion studio src/index.ts",
+    "render:us": "remotion render src/index.ts UsFilm out/us-market-city.mp4",
+    "render:tw": "remotion render src/index.ts TwFilm out/tw-market-city.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.484",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "remotion": "4.0.484"
+  },
+  "devDependencies": {
+    "@types/react": "19.2.17",
+    "puppeteer-core": "24.10.0",
+    "typescript": "6.0.3"
+  }
+}

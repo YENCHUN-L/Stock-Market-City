@@ -1,0 +1,16 @@
+import { openCity, tick } from './harness.mjs';
+const [market, port] = process.argv.slice(2);
+const { browser, page } = await openCity({ market, port });
+const shot = async n => { await page.screenshot({ path: `out/qa/probe-${market}-${n}.jpg`, type: 'jpeg', quality: 80 }); };
+await shot('home');
+await page.click('#flowBtn'); await tick(page, 45); await shot('flow');
+await page.click('#flowBtn'); await tick(page, 5);
+await page.click('#valBtn'); await tick(page, 45); await shot('val');
+await page.click('#valBtn'); await tick(page, 5);
+await page.click('#invBtn'); await tick(page, 45); await shot('inv');
+await page.click('#invBtn'); await tick(page, 5);
+await page.click('#periods button[data-p="1y"]'); await tick(page, 30); await shot('1y');
+await page.click('#heightMode button[data-h="flat"]'); await tick(page, 45); await shot('flat');
+const big = await page.evaluate(() => [...window.__sc.city.plots].sort((a,b)=>b.stock.cap-a.stock.cap).slice(0,5).map(p=>({sym:p.stock.sym,name:p.stock.name,cx:p.cx,cz:p.cz,h:p.hNow})));
+console.log(JSON.stringify(big));
+await browser.close();

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S&P 1500 Market City</title>
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/" } }
+</script>
+<style>
+  :root { --bg:#0b0e14; --panel:#141924ee; --line:#2a3140; --fg:#dde3ee; --mut:#8b93a5;
+          --up:#22c55e; --down:#ef4444; --acc:#3b82f6; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:var(--bg); color:var(--fg);
+               font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  #scene { position:fixed; inset:0; }
+  .up { color:var(--up); } .down { color:var(--down); } .mut { color:var(--mut); }
+
+  header { position:fixed; top:0; left:0; right:0; display:flex; flex-wrap:wrap; align-items:center; gap:10px 18px;
+           padding:10px 16px; background:linear-gradient(#0b0e14f0, #0b0e1400); pointer-events:none; }
+  header > * { pointer-events:auto; }
+  h1 { font-size:17px; margin:0; font-weight:650; }
+  .seg { display:flex; border:1px solid var(--line); border-radius:7px; overflow:hidden; background:var(--panel); }
+  .seg button { background:transparent; color:var(--mut); border:0; padding:5px 11px; font-size:13px; cursor:pointer; }
+  .seg button:hover { color:var(--fg); }
+  .seg button.on { background:var(--acc); color:#fff; }
+  #search { background:var(--panel); color:var(--fg); border:1px solid var(--line); border-radius:7px; padding:5px 9px;
+            width:150px; text-transform:uppercase; font-size:13px; }
+  #summary { font-size:13px; }
+  #summary b { font-size:15px; }
+  #progress { font-size:12px; color:var(--mut); }
+  #progress .bar { display:inline-block; width:120px; height:6px; background:var(--line); border-radius:3px; vertical-align:middle; margin-left:6px; overflow:hidden; }
+  #progress .bar i { display:block; height:100%; background:var(--acc); }
+
+  #legend { position:fixed; left:12px; bottom:12px; background:var(--panel); border:1px solid var(--line); border-radius:9px;
+            padding:8px 0; font-size:12px; min-width:240px; }
+  #legend h3 { margin:0 12px 6px; font-size:11px; font-weight:600; color:var(--mut); text-transform:uppercase; letter-spacing:.05em; cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+  #legend.collapsed h3 { margin-bottom:0; }
+  #legend.collapsed > :not(h3) { display:none; }
+  #legend .row { display:flex; justify-content:space-between; gap:12px; padding:3px 12px; cursor:pointer; }
+  #legend .row:hover { background:#ffffff0d; }
+  #legend .row.on { background:#3b82f633; }
+  #legend .row.dim { opacity:.45; }
+  #legend .scale { display:flex; align-items:center; gap:6px; margin:8px 12px 2px; color:var(--mut); }
+  #legend .grad { flex:1; height:8px; border-radius:4px; background:linear-gradient(90deg, #ef4444, #3a404d, #22c55e); }
+  #legend .hint { margin:6px 12px 0; color:var(--mut); font-size:11px; }
+
+  #tip { position:fixed; pointer-events:none; background:var(--panel); border:1px solid var(--line); border-radius:7px;
+         padding:6px 9px; font-size:12px; white-space:nowrap; display:none; z-index:5; }
+  #tip b { font-size:13px; }
+
+  #side { position:fixed; top:58px; right:12px; width:clamp(320px, 50vw, 980px); background:var(--panel); border:1px solid var(--line);
+          border-radius:9px; padding:12px 14px; font-size:13px; display:none; }
+  #side h2 { margin:0; font-size:18px; }
+  #side .nm { color:var(--mut); margin:2px 0 8px; }
+  #side .px { font-size:22px; font-weight:650; }
+  #side .chartwrap { position:relative; margin:8px 0; }
+  #side canvas { width:100%; height:200px; display:block; cursor:crosshair; }
+  #side .xhair { position:absolute; top:0; width:1px; background:#ffffff55; pointer-events:none; display:none; }
+  #side .cdot { position:absolute; width:7px; height:7px; border-radius:50%; background:#fff; transform:translate(-50%, -50%); pointer-events:none; display:none; }
+  #side .ctip { position:absolute; z-index:2; background:#0b0e14ee; border:1px solid var(--line); border-radius:6px; padding:6px 9px;
+                font-size:12px; line-height:1.5; white-space:nowrap; pointer-events:none; display:none; }
+  #side table { width:100%; border-collapse:collapse; }
+  #side td { padding:3px 0; border-bottom:1px solid var(--line); }
+  #side td:last-child { text-align:right; }
+  #side .close { position:absolute; top:6px; right:8px; background:none; border:0; color:var(--mut); font-size:16px; cursor:pointer; }
+
+  .label { font-size:11px; color:#fff; text-shadow:0 1px 3px #000, 0 0 2px #000; pointer-events:none; white-space:nowrap; }
+  .label.sector { font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#cfd6e4;
+                  background:#0b0e14aa; padding:2px 7px; border-radius:5px; }
+  .label.tick { font-weight:650; }
+
+  #valBtn.on { background:#f5b301; color:#1a1300; font-weight:650; }
+  #rightcol { position:fixed; right:12px; bottom:12px; width:300px; display:flex; flex-direction:column; gap:8px; }
+  #invBtn.on { background:#22d3ee; color:#00141a; font-weight:650; }
+  #invBtn:disabled, #instBtn:disabled { opacity:.45; cursor:not-allowed; }
+  #instBtn.on { background:#22d3ee; color:#00141a; font-weight:650; }
+  #invChips { flex-basis:100%; display:none; flex-wrap:wrap; gap:4px; }
+  #invChips button { background:var(--panel); color:var(--mut); border:1px solid var(--line); border-radius:12px; padding:2px 9px; font-size:12px; cursor:pointer; }
+  #invChips button:hover { color:var(--fg); }
+  #invChips button.on { background:#22d3ee; border-color:#22d3ee; color:#00141a; }
+  #invChips button.held { border-color:#22d3ee; color:var(--fg); }
+  #invChips button.dim { opacity:.35; }
+  #invChips button.on .mv-add, #invChips button.on .mv-cut, #invChips button.on .mv-eq { color:inherit; }
+  #flowBtn.on { background:#5eead4; color:#00201a; font-weight:650; }
+  #fpanel { display:none; background:var(--panel); border:1px solid #5eead455; border-radius:9px; padding:8px 0; font-size:12px; }
+  #fpanel h3 { margin:0 12px 6px; font-size:11px; font-weight:650; color:#5eead4; text-transform:uppercase; letter-spacing:.05em;
+               cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+  #fpanel.collapsed h3 { margin-bottom:0; }
+  #fpanel.collapsed > :not(h3) { display:none; }
+  /* Flow source buttons: the chosen source is underlined; filled while the flow is on. */
+  #flowSeg button[data-src].sel { color:#5eead4; box-shadow:inset 0 -2px 0 #5eead4; }
+  #flowSeg button[data-src].sel.on { background:#5eead433; color:#ccfbf1; }
+  #flowSeg button:disabled { opacity:.4; cursor:not-allowed; }
+  #fpanel .list { max-height:30vh; overflow-y:auto; }
+  #fpanel .frow { display:flex; justify-content:space-between; gap:10px; padding:2px 12px; cursor:pointer; }
+  #fpanel .frow:hover, #fpanel .frow.on { background:#5eead41a; }
+  #fpanel .fsub { margin:6px 12px 2px; color:var(--mut); font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+  #fpanel .hint { margin:6px 12px 0; color:var(--mut); font-size:11px; }
+  .label.flowlbl { font-size:12px; font-weight:700; color:#ccfbf1; background:#0b0e14bb; padding:1px 6px; border-radius:4px; pointer-events:auto; cursor:default; }
+  #ipanel { display:none; background:var(--panel); border:1px solid #22d3ee55; border-radius:9px; padding:8px 0; font-size:12px; }
+  #ipanel h3 { margin:0 12px 6px; font-size:11px; font-weight:650; color:#22d3ee; text-transform:uppercase; letter-spacing:.05em;
+               cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+  #ipanel.collapsed h3 { margin-bottom:0; }
+  #ipanel.collapsed > :not(h3) { display:none; }
+  #ipanel .list { max-height:calc(34vh - 60px); overflow-y:auto; }
+  #ipanel .irow { display:grid; grid-template-columns:58px 34px 1fr; gap:6px; padding:3px 12px; cursor:pointer; align-items:baseline; }
+  #ipanel .irow:hover { background:#22d3ee1a; }
+  #ipanel .irow.wide { grid-template-columns:104px 52px 1fr; }
+  #ipanel .itabs { display:flex; gap:4px; margin:0 12px 6px; }
+  #ipanel .itabs button { flex:1; background:transparent; color:var(--mut); border:1px solid var(--line); border-radius:6px; padding:2px 4px; font-size:11px; cursor:pointer; }
+  #ipanel .itabs button.on { background:#22d3ee; border-color:#22d3ee; color:#00141a; font-weight:650; }
+  #ipanel .mrow { display:grid; grid-template-columns:46px minmax(0, 1fr) 60px 48px 38px; gap:5px; padding:3px 12px; cursor:pointer; align-items:baseline; white-space:nowrap; font-size:11.5px; }
+  #ipanel .mrow > * { overflow:hidden; text-overflow:ellipsis; }
+  #ipanel .list { overflow-x:hidden; }
+  #ipanel .mrow:hover { background:#22d3ee1a; }
+  #ipanel .mrow > :nth-child(4), #ipanel .mrow > :nth-child(5) { text-align:right; }
+  #ipanel .moves { font-size:11px; color:var(--mut); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  #ipanel .hint { margin:6px 12px 0; color:var(--mut); font-size:11px; }
+  .mv-add { color:var(--up); } .mv-cut { color:var(--down); } .mv-eq { color:var(--mut); }
+  .combo { color:#22d3ee; }
+  #side table.inv td { white-space:nowrap; font-size:12px; }
+  #side table.inv td:first-child { white-space:normal; }
+  #side table.inv td:nth-child(2) { text-align:right; padding-right:8px; }
+  #vpanel { width:300px; max-height:38vh; display:none; background:var(--panel);
+            border:1px solid #f5b30155; border-radius:9px; padding:8px 0; font-size:12px; }
+  #vpanel h3 { margin:0 12px 6px; font-size:11px; font-weight:650; color:#f5b301; text-transform:uppercase; letter-spacing:.05em;
+               cursor:pointer; display:flex; justify-content:space-between; gap:10px; }
+  #vpanel.collapsed h3 { margin-bottom:0; }
+  #vpanel.collapsed > :not(h3) { display:none; }
+  #vpanel .list { max-height:calc(38vh - 60px); overflow-y:auto; }
+  #vpanel .vrow { display:grid; grid-template-columns:22px 58px 64px 1fr; gap:6px; padding:3px 12px; cursor:pointer; }
+  #vpanel .vrow:hover { background:#f5b3011a; }
+  #vpanel .vrow span:last-child { text-align:right; }
+  #vpanel .hint, #legend .hint.gold { margin:6px 12px 0; color:var(--mut); font-size:11px; }
+  #legend .hint.gold { color:#d9b44a; max-width:260px; }
+  #side h3.vh { margin:12px 0 4px; font-size:13px; display:flex; justify-content:space-between; align-items:center; }
+  #side .vl { font-size:11px; padding:1px 6px; border-radius:4px; background:#ffffff14; color:var(--mut); font-weight:600; }
+  #side .vl.high { background:#f5b301; color:#1a1300; } #side .vl.under { color:var(--up); } #side .vl.over { color:var(--down); }
+  #side { max-height:calc(100vh - 70px); overflow-y:auto; }
+  /* Half-page panel: valuation beside investors and returns, one column when narrow. */
+  #side .cols { display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:0 22px; align-items:start; }
+  #side h3.vh:first-of-type { margin-top:4px; }
+  #help { position:fixed; right:12px; bottom:12px; font-size:11px; color:var(--mut); text-align:right; line-height:1.5; }
+  @media (max-width: 700px) { #legend { display:none; } #side { width:auto; left:12px; } #help { display:none; } }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<header>
+  <h1>S&amp;P 1500 Market City</h1>
+  <div class="seg" id="periods" title="Return period: building height and color">
+    <button data-p="1d">1D</button><button data-p="1w">1W</button><button data-p="1m">1M</button>
+    <button data-p="3m">3M</button><button data-p="ytd">YTD</button><button data-p="1y">1Y</button>
+  </div>
+  <div class="seg" id="indexSeg" title="Toggle each index on/off: S&P 500 (large caps), 400 (mid caps), 600 (small caps). 500+400 = S&P 900, 400+600 = S&P 1000, all = S&P 1500">
+    <button data-i="500">500</button><button data-i="400">400</button><button data-i="600">600</button><button data-i="all">All</button>
+  </div>
+  <div class="seg" id="sizeSeg" title="Building footprint: market cap, √ market cap (small caps stay visible) or equal size">
+    <button data-s="cap">Cap</button><button data-s="sqrt">√Cap</button><button data-s="equal">Equal</button>
+  </div>
+  <div class="seg" id="heightMode" title="Building height">
+    <button data-h="return">3D</button><button data-h="flat">Flat</button>
+  </div>
+  <div class="seg"><button id="valBtn" title="Highlight highly undervalued companies (growth-aware DCF + quality checks)">★ Undervalued <span id="valCount"></span></button></div>
+  <div class="seg" id="flowSeg" title="Animate where value is flowing between sectors">
+    <button id="flowBtn" title="Show/hide the sector flow animation">⇄ Flow</button>
+    <button data-src="market" title="Flow source: each sector's market-value change vs the whole market, over the selected period">Market</button>
+    <button data-src="investors" title="Flow source: dollars the 10 famous investors added or trimmed per sector (last 13F quarter)">Investors</button>
+    <button data-src="institutions" title="Flow source: dollars the 8 biggest institutions (Vanguard, BlackRock…) added or trimmed per sector (last 13F quarter)">Institutions</button>
+  </div>
+  <div class="seg"><button id="invBtn" title="Highlight what 10 famous investors hold (SEC 13F) and whether they are adding or trimming">👤 Investors <span id="invCount"></span></button><button id="instBtn" title="The 8 biggest asset managers: how much of each company they own (SEC 13F) and where that changed most">🏛 Institutions <span id="instCount"></span></button></div>
+  <input id="search" list="symbols" placeholder="Fly to ticker…" maxlength="10">
+  <datalist id="symbols"></datalist>
+  <div id="summary"></div>
+  <div id="progress"></div>
+  <div id="invChips"></div>
+</header>
+<div id="legend"></div>
+<div id="tip"></div>
+<div id="side"><button class="close" title="Close">✕</button><div class="body"></div></div>
+<div id="rightcol"><div id="fpanel"></div><div id="vpanel"></div><div id="ipanel"></div></div>
+<div id="help">drag: orbit · right-drag or arrow keys: pan · wheel: zoom to cursor<br>click a building for details · double-click ground: fly there · Esc: reset view</div>
+<script type="module" src="city.js"></script>
+</body>
+</html>

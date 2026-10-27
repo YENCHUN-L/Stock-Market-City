@@ -1,0 +1,18 @@
+{
+  "fps": 30,
+  "sourceBeat0": 0.7491,
+  "beatInt": 0.48385,
+  "slamBeats": [16, 56, 72],
+  "shots": {
+    "open":    [0, 16],
+    "hero":    [16, 26],
+    "periods": [26, 36],
+    "card1":   [36, 40],
+    "flow":    [40, 52],
+    "card2":   [52, 56],
+    "feat1":   [56, 66],
+    "feat2":   [66, 72],
+    "outro":   [72, 82]
+  },
+  "tailFrames": 30
+}
