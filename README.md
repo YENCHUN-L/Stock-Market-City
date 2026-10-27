@@ -10,20 +10,13 @@ There are two cities: the **US S&P 1500** (about 1,500 stocks) and **Taiwan TWSE
 
 ## Videos
 
-<!--
-  To embed the videos, open this README in GitHub's web editor and drag
-  video/out/us-market-city.mp4 and video/out/tw-market-city.mp4 onto the page.
-  GitHub uploads each file and inserts a https://github.com/user-attachments/assets/... link.
-  Put each link on its own line, in place of the placeholders below, and GitHub shows a video player.
--->
+**S&P 1500 Market City** · [watch / download](docs/videos/us-market-city.mp4)
 
-**S&P 1500 Market City**
+<video src="docs/videos/us-market-city.mp4" controls width="100%"></video>
 
-US_VIDEO_LINK
+**台股 Market City** · [watch / download](docs/videos/tw-market-city.mp4)
 
-**台股 Market City**
-
-TW_VIDEO_LINK
+<video src="docs/videos/tw-market-city.mp4" controls width="100%"></video>
 
 ## What you can do
 
@@ -73,7 +66,7 @@ npm run render:us           # out/us-market-city.mp4
 npm run render:tw           # out/tw-market-city.mp4
 ```
 
-Footage, music and rendered videos are not in the repo, so you need to capture your own footage and add your
+The finished videos are in `docs/videos/`, but the footage and music are not in the repo, so you need to capture your own footage and add your
 own audio to `public/audio/`.
 
 ## Disclaimer
