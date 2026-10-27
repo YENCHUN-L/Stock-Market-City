@@ -10,13 +10,9 @@ There are two cities: the **US S&P 1500** (about 1,500 stocks) and **Taiwan TWSE
 
 ## Videos
 
-**S&P 1500 Market City** · [watch / download](docs/videos/us-market-city.mp4)
-
-<video src="docs/videos/us-market-city.mp4" controls width="100%"></video>
-
-**台股 Market City** · [watch / download](docs/videos/tw-market-city.mp4)
-
-<video src="docs/videos/tw-market-city.mp4" controls width="100%"></video>
+| S&P 1500 Market City | 台股 Market City |
+|---|---|
+| ![S&P 1500 Market City video](docs/images/us-preview.gif) | ![台股 Market City video](docs/images/tw-preview.gif) |
 
 ## What you can do
 
@@ -66,7 +62,7 @@ npm run render:us           # out/us-market-city.mp4
 npm run render:tw           # out/tw-market-city.mp4
 ```
 
-The finished videos are in `docs/videos/`, but the footage and music are not in the repo, so you need to capture your own footage and add your
+Footage, music and rendered videos are not in the repo, so you need to capture your own footage and add your
 own audio to `public/audio/`.
 
 ## Disclaimer
