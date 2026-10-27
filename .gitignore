@@ -5,6 +5,8 @@ video/node_modules/
 video/out/
 video/public/footage/
 video/public/audio/
-us/data/13f/
-us/data/prices3y/
-us/data/fund/
+
+# data (not backed up to GitHub)
+us/data/
+twse/data/
+video/capture/data/
